@@ -1,59 +1,211 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Domain Monitoring Admin
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Адмін-панель для автоматичного моніторингу доступності доменів.
 
-## About Laravel
+Проєкт реалізований як тестове завдання на `Laravel 12` з `Blade` UI та чергами/планувальником для фонових перевірок.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Основний функціонал
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Авторизація: реєстрація, вхід/вихід, захист приватних сторінок.
+- CRUD доменів: створення, редагування, видалення, список доменів користувача.
+- Налаштування перевірки для кожного домену:
+  - інтервал (`check_interval`, у секундах),
+  - таймаут (`timeout`, у секундах),
+  - HTTP метод (`GET` або `HEAD`).
+- Автоматичні перевірки доменів за розкладом.
+- Історія перевірок (логи): дата, результат, код відповіді, час відповіді, помилка.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Технології
 
-## Learning Laravel
+- Backend: `Laravel 12`
+- Frontend: `Blade` + `Vite`
+- DB: `MySQL 8+` (також підтримується `PostgreSQL 14+` через env)
+- Queue/Scheduler: Laravel Queue + Scheduler
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Архітектура (коротко)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- `Domain` - сутність домену та налаштувань перевірки.
+- `DomainCheck` - історія перевірок по домену.
+- `DomainCheckService` - виконує HTTP-перевірку і записує результат.
+- `RunDomainCheckJob` - фонове виконання однієї перевірки.
+- `domains:check-due` - команда, що знаходить домени, які пора перевіряти, і диспатчить jobs.
+- Scheduler щохвилини запускає `domains:check-due`.
 
-## Laravel Sponsors
+## Структура ключових файлів
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Роути:
+  - `routes/web.php`
+  - `routes/auth.php`
+  - `routes/console.php`
+- Домени:
+  - `app/Http/Controllers/Domain/DomainController.php`
+  - `app/Http/Requests/Domain/StoreDomainRequest.php`
+  - `app/Http/Requests/Domain/UpdateDomainRequest.php`
+  - `app/Policies/DomainPolicy.php`
+  - `resources/views/domains/*`
+- Моніторинг:
+  - `app/Services/Domain/DomainCheckService.php`
+  - `app/Jobs/RunDomainCheckJob.php`
+  - `app/Console/Commands/CheckDueDomainsCommand.php`
+- Міграції:
+  - `database/migrations/*create_domains_table.php`
+  - `database/migrations/*create_domain_checks_table.php`
 
-### Premium Partners
+## Вимоги до локального запуску
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- PHP `8.4+`
+- Composer `2+`
+- Node.js `20+` (рекомендовано для актуального Vite)
+- MySQL `8+` або PostgreSQL `14+`
 
-## Contributing
+## Локальний запуск
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Встановити залежності:
 
-## Code of Conduct
+```bash
+composer install
+npm install
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2. Підготувати env:
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3. Налаштувати БД у `.env` (приклад для MySQL):
 
-## License
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=domain_monitoring_admin
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. Створити БД `domain_monitoring_admin` у вашому MySQL/Postgres.
+
+5. Прогнати міграції:
+
+```bash
+php artisan migrate
+```
+
+6. Зібрати фронтенд:
+
+```bash
+npm run build
+```
+
+7. Запустити Laravel:
+
+```bash
+php artisan serve --port=8001
+```
+
+Відкрити: `http://127.0.0.1:8001`
+
+## Docker запуск
+
+### 1) Підготувати env для Docker
+
+Скопіюйте `.env.example` у `.env` і виставте параметри БД під docker-compose:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=domain_monitoring_admin
+DB_USERNAME=app
+DB_PASSWORD=app
+```
+
+### 2) Підняти контейнери
+
+```bash
+docker compose up -d --build
+```
+
+### 3) Встановити PHP-залежності всередині контейнера
+
+```bash
+docker compose exec app composer install
+```
+
+### 4) Згенерувати ключ і прогнати міграції
+
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate
+```
+
+### 5) Відкрити застосунок
+
+`http://127.0.0.1:8001`
+
+Примітки:
+- `queue` і `scheduler` запускаються окремими контейнерами автоматично.
+- Для зупинки:
+
+```bash
+docker compose down
+```
+
+## Автоматичні перевірки (важливо)
+
+Для локального авто-моніторингу потрібно запустити 2 процеси:
+
+1. Queue worker:
+
+```bash
+php artisan queue:work
+```
+
+2. Scheduler:
+
+```bash
+php artisan schedule:work
+```
+
+Ручний запуск перевірок:
+
+```bash
+php artisan domains:check-due
+```
+
+## Основні сторінки UI
+
+- `/dashboard` - дашборд
+- `/domains` - список доменів
+- `/domains/create` - створення домену
+- `/domains/{domain}/edit` - редагування
+- `/domains/{domain}/checks` - історія перевірок
+
+## Безпека і доступ
+
+- Доступ до доменів ізоляційний: користувач бачить і редагує тільки свої записи.
+- Авторизація дій з доменами реалізована через `DomainPolicy`.
+
+## Статус по ТЗ
+
+- Обов'язковий функціонал реалізовано:
+  - auth,
+  - домени + налаштування перевірок,
+  - автоматичні перевірки,
+  - логи історії.
+- Плюси (опційно): Docker, email-сповіщення та публічний demo deploy - можуть бути додані окремим етапом.
+
+## Demo
+
+- Demo URL: `TBD`
+- Deploy target: `Render / Railway / Fly.io`
+
+## Git
+
+Проєкт ведеться в Git-репозиторії. Рекомендований workflow:
+
+- `feature/*` гілки для задач,
+- Pull Request на `main`,
+- код-рев'ю перед merge.
