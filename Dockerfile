@@ -30,6 +30,9 @@ WORKDIR /var/www/html
 # Copy all application files
 COPY . .
 
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
+
 # Copy Nginx config
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 
