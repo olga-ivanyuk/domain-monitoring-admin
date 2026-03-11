@@ -12,6 +12,11 @@ class RunDomainCheckJob implements ShouldQueue, ShouldBeUnique
 {
     use Queueable;
 
+    /**
+     * Prevent stale unique locks from blocking checks forever.
+     */
+    public int $uniqueFor = 300;
+
     public function __construct(
         public int $domainId,
     ) {

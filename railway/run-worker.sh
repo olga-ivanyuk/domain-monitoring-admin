@@ -11,5 +11,17 @@ if [ "${RUN_MIGRATIONS_ON_START:-false}" = "true" ]; then
   php artisan migrate --force --no-interaction
 fi
 
+WORKER_CONNECTION="${WORKER_CONNECTION:-${QUEUE_CONNECTION:-database}}"
+WORKER_QUEUE="${WORKER_QUEUE:-default}"
+
 echo "Starting Laravel queue worker..."
-exec php artisan queue:work --sleep=3 --tries=3 --timeout=120 --max-time=3600 --no-interaction
+echo "Worker config: connection=${WORKER_CONNECTION}, queue=${WORKER_QUEUE}, app_env=${APP_ENV:-unknown}"
+
+exec php artisan queue:work "${WORKER_CONNECTION}" \
+  --queue="${WORKER_QUEUE}" \
+  --sleep=3 \
+  --tries=3 \
+  --timeout=120 \
+  --max-time=3600 \
+  --verbose \
+  --no-interaction

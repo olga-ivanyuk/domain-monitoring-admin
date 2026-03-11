@@ -33,13 +33,10 @@ class DomainCheckService
             $payload['status_code'] = $response->status();
 
         } catch (Throwable $e) {
-
             $payload['error'] = Str::limit($e->getMessage(), 5000, '');
-
         }
 
         $payload['response_time'] = (int) round((microtime(true) - $start) * 1000);
-
         $domain->checks()->create($payload);
     }
 
