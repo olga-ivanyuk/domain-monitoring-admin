@@ -44,6 +44,11 @@ COPY docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 # Make scripts executable
 RUN chmod +x railway/*.sh
 
+# Laravel needs write access for runtime caches / logs.
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwx storage bootstrap/cache
+
 EXPOSE 8080 9000
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
