@@ -6,7 +6,7 @@ APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "${APP_DIR}"
 
-if [ "${RUN_MIGRATIONS_ON_START:-true}" = "true" ]; then
+if [ "${RUN_MIGRATIONS_ON_START:-false}" = "true" ]; then
   echo "Running migrations before cron start..."
   php artisan migrate --force --no-interaction
 fi
