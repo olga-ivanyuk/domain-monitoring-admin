@@ -10,9 +10,13 @@ echo "Installing PHP dependencies..."
 composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 if [ "${RUN_NPM_BUILD:-false}" = "true" ]; then
-  echo "Installing Node dependencies and building assets..."
-  npm ci
-  npm run build
+  if command -v npm >/dev/null 2>&1; then
+    echo "Installing Node dependencies and building assets..."
+    npm ci
+    npm run build
+  else
+    echo "Warning: RUN_NPM_BUILD=true, but npm is not available in this image. Skipping frontend build."
+  fi
 fi
 
 echo "Preparing Laravel runtime..."
@@ -34,22 +38,3 @@ php artisan route:cache
 php artisan view:cache
 
 echo "Init completed."
-
-
-#!/bin/bash
-# Make sure this file has executable permissions, run `chmod +x railway/init-app.sh`
-
-# Exit the script if any command fails
-set -e
-
-# Run migrations
-php artisan migrate --force
-
-# Clear cache
-php artisan optimize:clear
-
-# Cache the various components of the Laravel application
-php artisan config:cache
-php artisan event:cache
-php artisan route:cache
-php artisan view:cache
