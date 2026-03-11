@@ -1,3 +1,14 @@
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY vite.config.js postcss.config.js tailwind.config.js ./
+COPY resources ./resources
+
+RUN npm ci
+RUN npm run build
+
 FROM php:8.4-fpm
 
 RUN apt-get update && apt-get install -y \
@@ -31,7 +42,10 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+# Copy prebuilt frontend assets from Node stage
+COPY --from=frontend-build /app/public/build /var/www/html/public/build
 
 # Copy Nginx config
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
