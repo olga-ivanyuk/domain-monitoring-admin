@@ -32,9 +32,9 @@ if [ -z "${APP_KEY:-}" ]; then
     echo "APP_KEY is not set, generating a new key in .env..."
     php artisan key:generate --force --no-interaction
   else
-    echo "Warning: APP_KEY is not set and .env file is missing."
-    echo "Generating a temporary APP_KEY for this build process."
-    export APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+    echo "Error: APP_KEY is not set and .env file is missing."
+    echo "Set APP_KEY in Railway Variables (format: base64:...) and redeploy."
+    exit 1
   fi
 fi
 
