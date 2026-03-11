@@ -35,6 +35,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 # Copy Nginx config
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
+COPY docker/nginx/default.conf /etc/nginx/sites-enabled/default
 
 # Create supervisor config for running both PHP-FPM and Nginx
 RUN mkdir -p /etc/supervisor/conf.d
