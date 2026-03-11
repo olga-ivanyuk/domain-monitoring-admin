@@ -40,11 +40,10 @@ COPY docker/nginx/default.conf /etc/nginx/sites-enabled/default
 # Create supervisor config for running both PHP-FPM and Nginx
 RUN mkdir -p /etc/supervisor/conf.d
 COPY docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
-COPY docker/start-container.sh /usr/local/bin/start-container.sh
 
 # Make scripts executable
-RUN chmod +x railway/*.sh /usr/local/bin/start-container.sh
+RUN chmod +x railway/*.sh
 
 EXPOSE 8080 9000
 
-CMD ["/usr/local/bin/start-container.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
