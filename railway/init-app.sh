@@ -28,8 +28,14 @@ php artisan view:clear
 php artisan cache:clear
 
 if [ -z "${APP_KEY:-}" ]; then
-  echo "APP_KEY is not set, generating a new key..."
-  php artisan key:generate --force
+  if [ -f ".env" ]; then
+    echo "APP_KEY is not set, generating a new key in .env..."
+    php artisan key:generate --force --no-interaction
+  else
+    echo "Warning: APP_KEY is not set and .env file is missing."
+    echo "Generating a temporary APP_KEY for this build process."
+    export APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+  fi
 fi
 
 php artisan migrate --force
