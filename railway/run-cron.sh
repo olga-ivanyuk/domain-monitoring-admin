@@ -6,6 +6,11 @@ APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "${APP_DIR}"
 
+if [ "${RUN_MIGRATIONS_ON_START:-true}" = "true" ]; then
+  echo "Running migrations before cron start..."
+  php artisan migrate --force --no-interaction
+fi
+
 echo "Starting Laravel scheduler loop..."
 while true; do
   php artisan schedule:run --verbose --no-interaction
