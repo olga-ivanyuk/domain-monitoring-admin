@@ -20,6 +20,8 @@ if [ "${RUN_NPM_BUILD:-false}" = "true" ]; then
 fi
 
 echo "Preparing Laravel runtime..."
+mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache
+
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
